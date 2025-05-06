@@ -10,25 +10,18 @@ const DynamicMap = dynamic(() => import('../components/Map'), { ssr: false });
 // Fungsi fetcher untuk SWR dengan error handling
 const fetcher = async (url) => {
   console.log(`Fetching data from: ${url}`);
-  try {
-    const response = await fetch(url);
-    
-    // Log respons HTTP untuk debugging
-    console.log(`Response status: ${response.status}`);
-    
-    if (!response.ok) {
-      const errorText = await response.text();
-      console.error(`Error response:`, errorText);
-      throw new Error(`API error: ${response.status} ${response.statusText}`);
-    }
-    
-    const data = await response.json();
-    console.log(`Data received from ${url}:`, data);
-    return data;
-  } catch (error) {
-    console.error(`Failed to fetch from ${url}:`, error);
-    throw error;
+  const response = await fetch(url);
+  
+  // Log respons HTTP untuk debugging
+  console.log(`Response status: ${response.status}`);
+  
+  if (!response.ok) {
+    throw new Error(`API error: ${response.status} ${response.statusText}`);
   }
+  
+  const data = await response.json();
+  console.log(`Data received from ${url}:`, data);
+  return data;
 };
 
 export default function Home() {
@@ -41,33 +34,31 @@ export default function Home() {
   // Debug mode
   const [showDebug, setShowDebug] = useState(false);
 
-  // Fetch kendaraan dengan polling 10 detik
+  // Fetch kendaraan - tanpa polling dulu untuk debuging
   const { 
     data: vehicleData, 
     error: vehicleError, 
     isLoading: isLoadingVehicles 
   } = useSWR(
-    '/api/proxy/items/daftar_kendaraan',
+    'http://ec2-13-239-62-109.ap-southeast-2.compute.amazonaws.com/items/daftar_kendaraan',
     fetcher,
     { 
-      refreshInterval: 10000,      // Polling setiap 10 detik
-      revalidateOnFocus: false,    // Hindari fetch ulang saat focus
-      dedupingInterval: 5000       // Dedupe interval 5 detik
+      revalidateOnFocus: false, // Hindari fetch ulang saat focus
+      dedupingInterval: 5000     // Dedupe interval 5 detik
     }
   );
 
-  // Fetch koordinat dengan polling 5 detik
+  // Fetch koordinat
   const { 
     data: coordData, 
     error: coordError, 
     isLoading: isLoadingCoords 
   } = useSWR(
-    '/api/proxy/items/koordinat_kendaraan?limit=-1',
+    'http://ec2-13-239-62-109.ap-southeast-2.compute.amazonaws.com/items/koordinat_kendaraan?limit=-1',
     fetcher,
     { 
-      refreshInterval: 5000,       // Polling lebih sering untuk koordinat (5 detik)
-      revalidateOnFocus: false,    // Hindari fetch ulang saat focus
-      dedupingInterval: 2000       // Dedupe interval 2 detik
+      revalidateOnFocus: false, // Hindari fetch ulang saat focus
+      dedupingInterval: 5000     // Dedupe interval 5 detik
     }
   );
 
